@@ -235,6 +235,11 @@ export default defineConfig({
     },
     
     vite: {
+        resolve: {
+            alias: [
+                { find: '/src', replacement: path.resolve(process.cwd(), 'docs/public/src') }
+            ]
+        },
         define: {
             __LATEST_UPDATE__: JSON.stringify(latestUpdate)
         },
