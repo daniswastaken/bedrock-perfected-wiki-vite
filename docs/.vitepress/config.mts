@@ -121,20 +121,99 @@ async function convertImagesToWebp() {
 }
 
 // https://vitepress.dev/reference/site-config
+const SITE_URL = 'https://wiki.handaru.dev';
+
 export default defineConfig({
     base: '/',
     appearance: 'force-dark',
 
     title: "Bedrock Perfected Wiki",
-    description: "A Wiki for Bedrock Perfected Addon",
+    titleTemplate: ':title | Bedrock Perfected Wiki',
+    description: "The official wiki for Bedrock Perfected — a Minecraft Bedrock Edition addon that adds new biomes, structures, items, mechanics, and quality-of-life improvements.",
 
-    head: [["link", { rel: "icon", href: "/favicon.ico" }]],
+    head: [
+        ["link", { rel: "icon", href: "/favicon.ico" }],
+        // Global SEO keywords for Google signals
+        ["meta", { name: "keywords", content: "Bedrock Perfected, Bedrock Perfected Wiki, Minecraft Bedrock addon, Minecraft addon wiki, bedrock perfected addon" }],
+        ["meta", { name: "author", content: "Bedrock Perfected" }],
+        ["meta", { name: "robots", content: "index, follow" }],
+    ],
+
+    sitemap: {
+        hostname: SITE_URL,
+    },
 
     cleanUrls: true,
 
     // Replace all .png/.jpg/.gif references in HTML with .webp
     transformHtml(code) {
         return code.replace(/(src|href)="([^"]+)\.(png|jpg|jpeg|jfif|gif)"/g, '$1="$2.webp"');
+    },
+
+    transformHead({ page, pageData, title, description }) {
+        const cleanPage = page.replace(/\.md$/, '').replace(/(^|\/)index$/, '$1');
+        const pageUrl = `${SITE_URL}/${cleanPage}`.replace(/\/$/, '') || SITE_URL;
+        const isHome = page === 'index.md';
+
+        const pageTitle = isHome
+            ? 'Bedrock Perfected Wiki'
+            : `${title} | Bedrock Perfected Wiki`;
+
+        const defaultDesc = "The official wiki for Bedrock Perfected — a Minecraft Bedrock Edition addon that adds new biomes, structures, items, mechanics, and quality-of-life improvements.";
+        const pageDesc = pageData.frontmatter?.description || description || defaultDesc;
+
+        const ogImage = `${SITE_URL}/logo.svg`;
+
+        const head: [string, Record<string, string>][] = [
+            // Description
+            ['meta', { name: 'description', content: pageDesc }],
+            // Canonical
+            ['link', { rel: 'canonical', href: isHome ? SITE_URL : pageUrl }],
+            // Open Graph
+            ['meta', { property: 'og:type', content: isHome ? 'website' : 'article' }],
+            ['meta', { property: 'og:site_name', content: 'Bedrock Perfected Wiki' }],
+            ['meta', { property: 'og:title', content: pageTitle }],
+            ['meta', { property: 'og:description', content: pageDesc }],
+            ['meta', { property: 'og:url', content: isHome ? SITE_URL : pageUrl }],
+            ['meta', { property: 'og:image', content: ogImage }],
+            // Twitter Card
+            ['meta', { name: 'twitter:card', content: 'summary' }],
+            ['meta', { name: 'twitter:title', content: pageTitle }],
+            ['meta', { name: 'twitter:description', content: pageDesc }],
+            ['meta', { name: 'twitter:image', content: ogImage }],
+        ];
+
+        // JSON-LD Structured Data
+        const jsonLd = isHome
+            ? {
+                '@context': 'https://schema.org',
+                '@type': 'WebSite',
+                name: 'Bedrock Perfected Wiki',
+                alternateName: 'Bedrock Perfected',
+                description: defaultDesc,
+                url: SITE_URL,
+                potentialAction: {
+                    '@type': 'SearchAction',
+                    target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/?search={search_term_string}` },
+                    'query-input': 'required name=search_term_string'
+                }
+            }
+            : {
+                '@context': 'https://schema.org',
+                '@type': 'TechArticle',
+                name: title,
+                description: pageDesc,
+                url: pageUrl,
+                isPartOf: {
+                    '@type': 'WebSite',
+                    name: 'Bedrock Perfected Wiki',
+                    url: SITE_URL
+                }
+            };
+
+        (head as any[]).push(['script', { type: 'application/ld+json' }, JSON.stringify(jsonLd)]);
+
+        return head as any;
     },
 
     themeConfig: {
