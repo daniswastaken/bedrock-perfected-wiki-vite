@@ -17,7 +17,7 @@ hero:
       link: /getting-started/how-to-navigate-the-wiki
     - theme: alt
       text: What's New
-      link: /updates/26-5-0
+      link: /updates/
 
 features:
   - icon: 🔍

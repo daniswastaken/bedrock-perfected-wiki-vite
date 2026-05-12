@@ -1,32 +1,52 @@
 import { defineConfig } from "vitepress";
+import { ViteImageOptimizer } from "vite-plugin-image-optimizer";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 
-// Support standard VitePress deployment patterns
-const base = process.env.BASE_URL || (process.env.VITE_GITHUB_PAGES === 'true' ? '/wiki/' : '/');
+function formatTitle(text: string) {
+    if (text === 'qol') return 'Quality of Life';
+    return text.split('-').map(word => {
+        if (word.toLowerCase() === 'ui') return 'UI';
+        return word.charAt(0).toUpperCase() + word.slice(1);
+    }).join(' ');
+}
 
-function getUpdatesSidebar() {
-    const updatesDir = path.resolve(process.cwd(), 'docs/updates');
-    try {
-        const files = fs.readdirSync(updatesDir);
-        return files
-            .filter(file => file.endsWith('.md') && file !== 'index.md')
-            .map(file => {
-                const name = file.replace('.md', '');
+function getSidebar() {
+    const docsDir = path.resolve(process.cwd(), 'docs');
+    const categories = ['getting-started', 'better-ui', 'new-biomes', 'new-structures', 'new-items', 'new-mechanics', 'qol', 'texture-improvement', 'updates'];
+    
+    const sidebar: any[] = [];
+
+    for (const category of categories) {
+        const categoryDir = path.join(docsDir, category);
+        if (!fs.existsSync(categoryDir)) continue;
+
+        const files = fs.readdirSync(categoryDir).filter(f => f.endsWith('.md') && f !== 'index.md');
+        
+        let items = files.map(file => {
+            const name = file.replace('.md', '');
+            
+            // Special handling for updates version formatting
+            if (category === 'updates') {
                 let versionText = name;
-                // e.g. 26-5-0 -> 26.5.0. If ends in .0, trim it for cleaner display.
                 let parts = name.split('-');
                 if (parts[parts.length - 1] === '0' && parts.length > 2) {
                     parts.pop();
                 }
                 versionText = 'v' + parts.join('.');
+                return { text: versionText, link: `/${category}/${name}` };
+            }
+            
+            return {
+                text: formatTitle(name),
+                link: `/${category}/${name}`
+            };
+        });
 
-                return {
-                    text: versionText,
-                    link: `/updates/${name}`
-                };
-            })
-            .sort((a, b) => {
+        // Special sorting for updates
+        if (category === 'updates') {
+            items.sort((a, b) => {
                  const vA = (a.link.split('/').pop() || '').replace('.md', '').split('-').map(Number);
                  const vB = (b.link.split('/').pop() || '').replace('.md', '').split('-').map(Number);
                  for (let i = 0; i < Math.max(vA.length, vB.length); i++) {
@@ -36,134 +56,121 @@ function getUpdatesSidebar() {
                  }
                  return 0;
             });
-    } catch (e) {
-        console.error("Failed to read updates directory:", e);
-        return [];
+        }
+
+        sidebar.push({
+            text: formatTitle(category),
+            collapsed: false,
+            items: items
+        });
     }
+
+    return sidebar;
+}
+
+function getLatestUpdate() {
+    const updatesDir = path.resolve(process.cwd(), 'docs/updates');
+    if (!fs.existsSync(updatesDir)) return 'index';
+    const files = fs.readdirSync(updatesDir).filter(f => f.endsWith('.md') && f !== 'index.md');
+    if (files.length === 0) return 'index';
+    
+    return files.sort((a, b) => {
+        const vA = a.replace('.md', '').split('-').map(Number);
+        const vB = b.replace('.md', '').split('-').map(Number);
+        for (let i = 0; i < Math.max(vA.length, vB.length); i++) {
+            const numA = vA[i] || 0;
+            const numB = vB[i] || 0;
+            if (numA !== numB) return numB - numA;
+        }
+        return 0;
+    })[0].replace('.md', '');
+}
+
+const latestUpdate = getLatestUpdate();
+
+/**
+ * Automatically converts all PNG/JPG/JPEG files in public/src to WebP
+ * so the user can just drop them in and have them optimized.
+ */
+async function convertImagesToWebp() {
+    const srcDir = path.resolve(process.cwd(), 'docs/public/src');
+    if (!fs.existsSync(srcDir)) return;
+
+    const processFiles = async (dir: string) => {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+                await processFiles(fullPath);
+            } else if (/\.(png|jpg|jpeg|jfif|gif)$/i.test(entry.name)) {
+                const webpPath = fullPath.replace(/\.[^.]+$/, '.webp');
+                // Only convert if webp doesn't exist or is older than source
+                if (!fs.existsSync(webpPath) || fs.statSync(fullPath).mtime > fs.statSync(webpPath).mtime) {
+                    console.log(`[WebP Converter] Optimizing ${entry.name} -> .webp`);
+                    try {
+                        const isGif = /\.gif$/i.test(entry.name);
+                        await sharp(fullPath, { animated: isGif }).webp({ quality: 80 }).toFile(webpPath);
+                    } catch (e) {
+                        console.error(`Failed to convert ${entry.name}:`, e);
+                    }
+                }
+            }
+        }
+    };
+    await processFiles(srcDir);
 }
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-    base: base,
+    base: '/',
+    appearance: 'force-dark',
 
     title: "Bedrock Perfected Wiki",
     description: "A Wiki for Bedrock Perfected Addon",
 
-    head: [["link", { rel: "icon", href: `${base}favicon.ico`.replace('//', '/') }]],
+    head: [["link", { rel: "icon", href: "/favicon.ico" }]],
 
     cleanUrls: true,
 
+    // Replace all .png/.jpg/.gif references in HTML with .webp
+    transformHtml(code) {
+        return code.replace(/(src|href)="([^"]+)\.(png|jpg|jpeg|jfif|gif)"/g, '$1="$2.webp"');
+    },
+
     themeConfig: {
-        // https://vitepress.dev/reference/default-theme-config
         search: {
             provider: "local",
         },
-
         logo: "/logo.svg",
-
         nav: [{ text: "Home", link: "/" }],
-
-        sidebar: [
-            {
-                text: "Getting Started",
-                collapsed: false,
-                items: [
-                    { text: "How To Navigate the Wiki", link: "/getting-started/how-to-navigate-the-wiki" },
-                    { text: "Addon Configurations", link: "/getting-started/addon-configurations" },
-                    // { text: "Latest Updates", link: "/getting-started/new-updates" }
-                ],
-            },
-            {
-                text: "Better UI",
-                collapsed: false,
-                items: [
-                    { text: "Brewing Guide UI", link: "/better-ui/brewing-guide-ui" },
-                    { text: "Clearer Wither Hearts", link: "/better-ui/clearer-wither-hearts" },
-                    { text: "Dark UI", link: "/better-ui/dark-ui" },
-                    { text: "Lower Shield", link: "/better-ui/lower-shield" },
-                    { text: "No How To Play", link: "/better-ui/no-how-to-play" },
-                    { text: "No Vignette", link: "/better-ui/no-vignette" },
-                    { text: "Quick Crafting", link: "/better-ui/quick-crafting" },
-                    { text: "Show All Trades", link: "/better-ui/show-all-trades" },
-                ],
-            },
-            {
-                text: "New Biomes",
-                collapsed: false,
-                items: [
-                    { text: "Selena Basin", link: "/new-biomes/selena-basin" },
-                    { text: "Sierra", link: "/new-biomes/sierra" },
-                    { text: "Sunflower Fields", link: "/new-biomes/sunflower-fields" }
-                ],
-            },
-            {
-                text: "New Structures",
-                collapsed: false,
-                items: [
-                    { text: "Carriage", link: "/new-structures/carriage" },
-                    { text: "Crops", link: "/new-structures/crops" },
-                    { text: "Lumber Piles", link: "/new-structures/lumber-piles" },
-                ],
-            },
-            {
-                text: "New Items",
-                collapsed: false,
-                items: [
-                    { text: "Addon Configuration", link: "/new-items/addon-configuration" },
-                    { text: "Scroll of the Hearth", link: "/new-items/scroll-of-the-hearth" },
-                ],
-            },
-            {
-                text: "New Mechanics",
-                collapsed: false,
-                items: [
-                    { text: "Biome Notifier", link: "/new-mechanics/biome-notifier" },
-                    { text: "Coordinates Compass", link: "/new-mechanics/coordinates-compass" },
-                    { text: "Damage Indicator", link: "/new-mechanics/damage-indicator" },
-                    { text: "Random Iron Golem Names", link: "/new-mechanics/random-iron-golem-names" },
-                    { text: "Random Villager Names", link: "/new-mechanics/random-villager-names" },
-                    { text: "Settlement", link: "/new-mechanics/settlement" },
-                    { text: "Starter Kits", link: "/new-mechanics/starter-kits" },
-                ],
-            },
-            {
-                text: "Quality of Life",
-                collapsed: false,
-                items: [
-                    { text: "Craftables", link: "/qol/craftables" },
-                    { text: "Just More", link: "/qol/just-more" },
-                    { text: "Smeltables", link: "/qol/smeltables" },
-                    { text: "Stonecutterables", link: "/qol/stonecutterables" },
-                    { text: "Unpackables", link: "/qol/unpackables" },
-                ],
-            },
-            {
-                text: "Texture Improvement",
-                collapsed: false,
-                items: [
-                    { text: "Clear Glass", link: "/texture-improvement/clear-glass" },
-                    { text: "Darker Dark Oak Leaves", link: "/texture-improvement/darker-dark-oak-leaves" },
-                    { text: "Different Stems", link: "/texture-improvement/different-stems" },
-                    { text: "Fancier Sunflower", link: "/texture-improvement/fancier-sunflower" },
-                    { text: "Fully Grown Kelp", link: "/texture-improvement/fully-grown-kelp" },
-                    { text: "Golden Savanna", link: "/texture-improvement/golden-savanna" },
-                    { text: "Pink End Rods", link: "/texture-improvement/pink-end-rods" },
-                    { text: "Sticky Piston Sides", link: "/texture-improvement/sticky-piston-sides" },
-                    { text: "Texture Variations", link: "/texture-improvement/texture-variations" },
-                    { text: "Villager Skin Tones", link: "/texture-improvement/villager-skin-tones" },
-                    { text: "Zombie Variations", link: "/texture-improvement/zombie-variations" },
-                ],
-            },
-            {
-                text: "Updates",
-                collapsed: false,
-                items: getUpdatesSidebar(),
-            },
-        ],
-
+        sidebar: getSidebar(),
         socialLinks: [
-            { icon: "github", link: "https://github.com/daniswastaken/bedrock-perfected" },
+            { 
+                icon: {
+                    svg: '<svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><title>CurseForge</title><path d="M18.326 9.2145S23.2261 8.4418 24 6.1882h-7.5066V4.4H0l2.0318 2.3576V9.173s5.1267-.2665 7.1098 1.2372c2.7146 2.516-3.053 5.917-3.053 5.917L5.0995 19.6c1.5465-1.4726 4.494-3.3775 9.8983-3.2857-2.0565.65-4.1245 1.6651-5.7344 3.2857h10.9248l-1.0288-3.2726s-7.918-4.6688-.8336-7.1127z"/></svg>'
+                },
+                link: "https://www.curseforge.com/minecraft-bedrock/addons/bedrock-perfected" 
+            },
             { icon: "discord", link: "https://discord.gg/R6b8HzYKtg" }
         ],
     },
+    
+    vite: {
+        define: {
+            __LATEST_UPDATE__: JSON.stringify(latestUpdate)
+        },
+        plugins: [
+            {
+                name: 'webp-converter',
+                async buildStart() {
+                    await convertImagesToWebp();
+                }
+            },
+            ViteImageOptimizer({
+                png: { quality: 80 },
+                webp: { quality: 80 },
+                jpeg: { quality: 80 },
+            })
+        ]
+    }
 });

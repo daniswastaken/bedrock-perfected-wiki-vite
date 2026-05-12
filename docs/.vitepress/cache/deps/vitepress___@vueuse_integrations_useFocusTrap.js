@@ -3,16 +3,16 @@ import {
   toArray,
   tryOnScopeDispose,
   unrefElement
-} from "./chunk-2762AXES.js";
+} from "./chunk-U44ZK3CZ.js";
 import {
   computed,
   shallowRef,
   toValue,
   watch
-} from "./chunk-ADVWCYKY.js";
+} from "./chunk-O6EOGSKJ.js";
 
 // node_modules/tabbable/dist/index.esm.js
-var candidateSelectors = ["input:not([inert])", "select:not([inert])", "textarea:not([inert])", "a[href]:not([inert])", "button:not([inert])", "[tabindex]:not(slot):not([inert])", "audio[controls]:not([inert])", "video[controls]:not([inert])", '[contenteditable]:not([contenteditable="false"]):not([inert])', "details>summary:first-of-type:not([inert])", "details:not([inert])"];
+var candidateSelectors = ["input:not([inert]):not([inert] *)", "select:not([inert]):not([inert] *)", "textarea:not([inert]):not([inert] *)", "a[href]:not([inert]):not([inert] *)", "button:not([inert]):not([inert] *)", "[tabindex]:not(slot):not([inert]):not([inert] *)", "audio[controls]:not([inert]):not([inert] *)", "video[controls]:not([inert]):not([inert] *)", '[contenteditable]:not([contenteditable="false"]):not([inert]):not([inert] *)', "details>summary:first-of-type:not([inert]):not([inert] *)", "details:not([inert]):not([inert] *)"];
 var candidateSelector = candidateSelectors.join(",");
 var NoElement = typeof Element === "undefined";
 var matches = NoElement ? function() {
@@ -30,7 +30,9 @@ var _isInert = function isInert(node, lookUp) {
   }
   var inertAtt = node === null || node === void 0 ? void 0 : (_node$getAttribute = node.getAttribute) === null || _node$getAttribute === void 0 ? void 0 : _node$getAttribute.call(node, "inert");
   var inert = inertAtt === "" || inertAtt === "true";
-  var result = inert || lookUp && node && _isInert(node.parentNode);
+  var result = inert || lookUp && node && // closest does not exist on shadow roots, so we fall back to a manual
+  // lookup upward, in case it is not defined.
+  (typeof node.closest === "function" ? node.closest("[inert]") : _isInert(node.parentNode));
   return result;
 };
 var isContentEditable = function isContentEditable2(node) {
@@ -264,10 +266,7 @@ var isDisabledFromFieldset = function isDisabledFromFieldset2(node) {
   return false;
 };
 var isNodeMatchingSelectorFocusable = function isNodeMatchingSelectorFocusable2(options, node) {
-  if (node.disabled || // we must do an inert look up to filter out any elements inside an inert ancestor
-  //  because we're limited in the type of selectors we can use in JSDom (see related
-  //  note related to `candidateSelectors`)
-  _isInert(node) || isHiddenInput(node) || isHidden(node, options) || // For a details element with a summary, the summary element gets the focus
+  if (node.disabled || isHiddenInput(node) || isHidden(node, options) || // For a details element with a summary, the summary element gets the focus
   isDetailsWithSummary(node) || isDisabledFromFieldset(node)) {
     return false;
   }
@@ -350,7 +349,7 @@ var isTabbable = function isTabbable2(node, options) {
   }
   return isNodeMatchingSelectorTabbable(options, node);
 };
-var focusableCandidateSelector = candidateSelectors.concat("iframe").join(",");
+var focusableCandidateSelector = candidateSelectors.concat("iframe:not([inert]):not([inert] *)").join(",");
 var isFocusable = function isFocusable2(node, options) {
   options = options || {};
   if (!node) {
@@ -589,9 +588,9 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
     // references to nodes that are siblings to the ancestors of this trap's containers.
     /** @type {Set<HTMLElement>} */
     adjacentElements: /* @__PURE__ */ new Set(),
-    // references to nodes that were inert before the trap was activated.
+    // references to nodes that were inert or aria-hidden before the trap was activated.
     /** @type {Set<HTMLElement>} */
-    alreadyInert: /* @__PURE__ */ new Set(),
+    alreadySilent: /* @__PURE__ */ new Set(),
     nodeFocusedBeforeActivation: null,
     mostRecentlyFocusedNode: null,
     active: false,
@@ -986,7 +985,7 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
       trap._setSubtreeIsolation(false);
     }
     state.adjacentElements.clear();
-    state.alreadyInert.clear();
+    state.alreadySilent.clear();
     var containerAncestors = /* @__PURE__ */ new Set();
     var adjacentElements = /* @__PURE__ */ new Set();
     var _iterator = _createForOfIteratorHelper(containers), _step;
@@ -1086,7 +1085,8 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
       var preexistingTrap = activeFocusTraps.getActiveTrap(trapStack);
       var revertState = false;
       if (preexistingTrap && !preexistingTrap.paused) {
-        preexistingTrap._setSubtreeIsolation(false);
+        var _preexistingTrap$_set;
+        (_preexistingTrap$_set = preexistingTrap._setSubtreeIsolation) === null || _preexistingTrap$_set === void 0 || _preexistingTrap$_set.call(preexistingTrap, false);
         revertState = true;
       }
       try {
@@ -1115,7 +1115,8 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
         finishActivation();
       } catch (error) {
         if (preexistingTrap === activeFocusTraps.getActiveTrap(trapStack) && revertState) {
-          preexistingTrap._setSubtreeIsolation(true);
+          var _preexistingTrap$_set2;
+          (_preexistingTrap$_set2 = preexistingTrap._setSubtreeIsolation) === null || _preexistingTrap$_set2 === void 0 || _preexistingTrap$_set2.call(preexistingTrap, true);
         }
         throw error;
       }
@@ -1135,7 +1136,7 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
       if (!state.paused) {
         trap._setSubtreeIsolation(false);
       }
-      state.alreadyInert.clear();
+      state.alreadySilent.clear();
       removeListeners();
       state.active = false;
       state.paused = false;
@@ -1233,16 +1234,33 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
       value: function value(isEnabled) {
         if (config.isolateSubtrees) {
           state.adjacentElements.forEach(function(el) {
+            var _el$getAttribute;
             if (isEnabled) {
-              var isInitiallyInert = el.inert || el.hasAttribute("inert");
-              if (isInitiallyInert) {
-                state.alreadyInert.add(el);
+              switch (config.isolateSubtrees) {
+                case "aria-hidden":
+                  if (el.ariaHidden === "true" || ((_el$getAttribute = el.getAttribute("aria-hidden")) === null || _el$getAttribute === void 0 ? void 0 : _el$getAttribute.toLowerCase()) === "true") {
+                    state.alreadySilent.add(el);
+                  }
+                  el.setAttribute("aria-hidden", "true");
+                  break;
+                default:
+                  if (el.inert || el.hasAttribute("inert")) {
+                    state.alreadySilent.add(el);
+                  }
+                  el.setAttribute("inert", true);
+                  break;
               }
-              el.inert = true;
             } else {
-              if (state.alreadyInert.has(el)) ;
+              if (state.alreadySilent.has(el)) ;
               else {
-                el.inert = false;
+                switch (config.isolateSubtrees) {
+                  case "aria-hidden":
+                    el.removeAttribute("aria-hidden");
+                    break;
+                  default:
+                    el.removeAttribute("inert");
+                    break;
+                }
               }
             }
           });
@@ -1254,7 +1272,7 @@ var createFocusTrap = function createFocusTrap2(elements, userOptions) {
   return trap;
 };
 
-// node_modules/@vueuse/integrations/dist/useFocusTrap-lXZ_YG-8.js
+// node_modules/@vueuse/integrations/useFocusTrap.mjs
 function useFocusTrap(target, options = {}) {
   let trap;
   const { immediate, ...focusTrapOptions } = options;
@@ -1274,32 +1292,36 @@ function useFocusTrap(target, options = {}) {
       isPaused.value = false;
     }
   };
-  watch(computed(() => {
-    return toArray(toValue(target)).map((el) => {
+  const targets = computed(() => {
+    const _targets = toValue(target);
+    return toArray(_targets).map((el) => {
       const _el = toValue(el);
       return typeof _el === "string" ? _el : unrefElement(_el);
     }).filter(notNullish);
-  }), (els) => {
-    if (!els.length) return;
-    if (!trap) {
+  });
+  watch(
+    targets,
+    (els) => {
+      if (!els.length)
+        return;
       trap = createFocusTrap(els, {
         ...focusTrapOptions,
         onActivate() {
           hasFocus.value = true;
-          if (options.onActivate) options.onActivate();
+          if (options.onActivate)
+            options.onActivate();
         },
         onDeactivate() {
           hasFocus.value = false;
-          if (options.onDeactivate) options.onDeactivate();
+          if (options.onDeactivate)
+            options.onDeactivate();
         }
       });
-      if (immediate) activate();
-    } else {
-      const isActive = trap === null || trap === void 0 ? void 0 : trap.active;
-      trap === null || trap === void 0 || trap.updateContainerElements(els);
-      if (!isActive && immediate) activate();
-    }
-  }, { flush: "post" });
+      if (immediate)
+        activate();
+    },
+    { flush: "post" }
+  );
   tryOnScopeDispose(() => deactivate());
   return {
     hasFocus,
@@ -1313,4 +1335,18 @@ function useFocusTrap(target, options = {}) {
 export {
   useFocusTrap
 };
+/*! Bundled license information:
+
+tabbable/dist/index.esm.js:
+  (*!
+  * tabbable 6.4.0
+  * @license MIT, https://github.com/focus-trap/tabbable/blob/master/LICENSE
+  *)
+
+focus-trap/dist/focus-trap.esm.js:
+  (*!
+  * focus-trap 7.8.0
+  * @license MIT, https://github.com/focus-trap/focus-trap/blob/master/LICENSE
+  *)
+*/
 //# sourceMappingURL=vitepress___@vueuse_integrations_useFocusTrap.js.map

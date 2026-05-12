@@ -1,7 +1,10 @@
 {
   "devDependencies": {
     "@types/node": "^25.0.3",
-    "vitepress": "^2.0.0-alpha.15"
+    "sharp": "^0.34.5",
+    "svgo": "^4.0.1",
+    "vite-plugin-image-optimizer": "^2.0.3",
+    "vitepress": "^1.6.4"
   },
   "scripts": {
     "dev": "vitepress dev docs --host 0.0.0.0",
