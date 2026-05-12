@@ -1,15 +1,55 @@
 import { defineConfig } from "vitepress";
+import fs from "fs";
+import path from "path";
 
-const isGitHubPages = process.env.VITE_GITHUB_PAGES === 'true'
+// Support standard VitePress deployment patterns
+const base = process.env.BASE_URL || (process.env.VITE_GITHUB_PAGES === 'true' ? '/wiki/' : '/');
+
+function getUpdatesSidebar() {
+    const updatesDir = path.resolve(process.cwd(), 'docs/updates');
+    try {
+        const files = fs.readdirSync(updatesDir);
+        return files
+            .filter(file => file.endsWith('.md') && file !== 'index.md')
+            .map(file => {
+                const name = file.replace('.md', '');
+                let versionText = name;
+                // e.g. 26-5-0 -> 26.5.0. If ends in .0, trim it for cleaner display.
+                let parts = name.split('-');
+                if (parts[parts.length - 1] === '0' && parts.length > 2) {
+                    parts.pop();
+                }
+                versionText = 'v' + parts.join('.');
+
+                return {
+                    text: versionText,
+                    link: `/updates/${name}`
+                };
+            })
+            .sort((a, b) => {
+                 const vA = (a.link.split('/').pop() || '').replace('.md', '').split('-').map(Number);
+                 const vB = (b.link.split('/').pop() || '').replace('.md', '').split('-').map(Number);
+                 for (let i = 0; i < Math.max(vA.length, vB.length); i++) {
+                     const numA = vA[i] || 0;
+                     const numB = vB[i] || 0;
+                     if (numA !== numB) return numB - numA;
+                 }
+                 return 0;
+            });
+    } catch (e) {
+        console.error("Failed to read updates directory:", e);
+        return [];
+    }
+}
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-    base: isGitHubPages ? '/wiki/' : '/',
+    base: base,
 
     title: "Bedrock Perfected Wiki",
     description: "A Wiki for Bedrock Perfected Addon",
 
-    head: [["link", { rel: "icon", href: isGitHubPages ? '/wiki/favicon.ico' : '/favicon.ico' }]],
+    head: [["link", { rel: "icon", href: `${base}favicon.ico`.replace('//', '/') }]],
 
     cleanUrls: true,
 
@@ -117,14 +157,7 @@ export default defineConfig({
             {
                 text: "Updates",
                 collapsed: false,
-                items: [
-                    { text: "v26.5", link: "/updates/26-5-0" },
-                    { text: "v26.4", link: "/updates/26-4-0" },
-                    { text: "v26.3", link: "/updates/26-3-0" },
-                    { text: "v26.2.1", link: "/updates/26-2-1" },
-                    { text: "v26.2", link: "/updates/26-2-0" },
-                    { text: "v26.1", link: "/updates/26-1-0" }
-                ],
+                items: getUpdatesSidebar(),
             },
         ],
 
