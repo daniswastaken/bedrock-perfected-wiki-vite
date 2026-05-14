@@ -4,8 +4,8 @@ Lumber piles are now scattered throughout the world, available for all wood vari
 
 ## Standard Lumber Piles
 
-![Lumber Piles](/src/images/new-structures/lumber-piles.webp)
+![Lumber Piles #trim-left](/src/images/new-structures/lumber-piles.webp)
 
 ## Stripped Lumber Piles
 
-![Stripped Lumber Piles](/src/images/new-structures/lumber-piles-stripped.webp)
+![Stripped Lumber Piles #trim-left](/src/images/new-structures/lumber-piles-stripped.webp)

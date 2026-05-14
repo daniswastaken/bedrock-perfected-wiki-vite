@@ -11,4 +11,4 @@
 | **Spawning** | Iceberg Ocean |
 | **Behavior** | Passive |
 | **Drops** | Feather (1-2) |
-| **Breeding** | Raw Cod or Salmon |
+| **Breeding** | Raw Cod or Raw Salmon |

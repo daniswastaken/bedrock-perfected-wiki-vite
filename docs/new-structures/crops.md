@@ -1,6 +1,6 @@
 # Crops
 
-New crop patches add variety to the agricultural landscape, often found near villages or as wild growth.
+New crop patches add variety to the overworld landscape, often found as wild growth in random locations.
 
 ## Beetroot Patch
 A patch of beetroot ready for harvest.

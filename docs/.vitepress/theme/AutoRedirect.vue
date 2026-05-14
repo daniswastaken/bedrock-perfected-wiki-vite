@@ -2,6 +2,13 @@
 import { useData, useRouter } from 'vitepress'
 import { onMounted } from 'vue'
 
+const props = defineProps({
+  section: {
+    type: String,
+    default: null
+  }
+})
+
 const { theme, page } = useData()
 const router = useRouter()
 
@@ -9,12 +16,18 @@ onMounted(() => {
   const sidebar = theme.value.sidebar
   if (!sidebar) return
 
-  const currentPath = page.value.relativePath
-  const sectionDir = currentPath.split('/')[0]
-
-  const section = sidebar.find(s => 
-    s.items && s.items.some(item => item.link.startsWith(`/${sectionDir}/`))
-  )
+  let section
+  if (props.section) {
+    // Find section by text name (e.g., 'Updates')
+    section = sidebar.find(s => s.text === props.section)
+  } else {
+    // Fallback to current behavior: find section based on current directory
+    const currentPath = page.value.relativePath
+    const sectionDir = currentPath.split('/')[0]
+    section = sidebar.find(s => 
+      s.items && s.items.some(item => item.link.startsWith(`/${sectionDir}/`))
+    )
+  }
 
   if (section && section.items && section.items.length > 0) {
     const firstItem = section.items[0]

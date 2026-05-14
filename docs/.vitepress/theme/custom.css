@@ -54,6 +54,13 @@
 .VPNavBarSearch .DocSearch-Button:hover {
   background-color: #1f2023;
 }
+
+.trim-left {
+  clip-path: inset(0 0 0 3px);
+  margin-left: -3px;
+  display: inline-block;
+  vertical-align: middle;
+}
 .mob-image img {
   width: 222px !important;
   height: 222px !important;

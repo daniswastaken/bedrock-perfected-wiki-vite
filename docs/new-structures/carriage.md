@@ -4,7 +4,7 @@ Carriages can now be found throughout your wandering journey, adding a sense of 
 
 ## Big Carriage
 
-![Big Carriage](/src/images/new-structures/big-carriage.webp)
+![Big Carriage #trim-left](/src/images/new-structures/big-carriage.webp)
 
 ## Small Carriage
 
