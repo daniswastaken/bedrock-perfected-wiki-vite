@@ -1,13 +1,9 @@
----
+﻿---
 layout: page
 title: Redirecting...
 ---
 
-<script setup>
-if (typeof window !== 'undefined') {
-  window.location.replace('/new-biomes/selena-basin')
-}
-</script>
+<AutoRedirect />
 
 <style scoped>
 body {

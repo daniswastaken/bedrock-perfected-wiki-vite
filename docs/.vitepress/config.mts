@@ -14,7 +14,7 @@ function formatTitle(text: string) {
 
 function getSidebar() {
     const docsDir = path.resolve(process.cwd(), 'docs');
-    const categories = ['getting-started', 'better-ui', 'new-biomes', 'new-structures', 'new-items', 'new-mechanics', 'qol', 'texture-improvement', 'updates'];
+    const categories = ['getting-started', 'better-ui', 'new-biomes', 'new-structures', 'new-items', 'new-mobs', 'new-mechanics', 'qol', 'texture-improvement', 'updates'];
     
     const sidebar: any[] = [];
 
