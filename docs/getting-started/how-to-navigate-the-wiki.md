@@ -1,20 +1,35 @@
-# How To Navigate the Wiki
-This page is a guide on how to navigate around the wiki both on Desktop or Mobile.
+# How to Use the Wiki
 
-## Navigating on Desktop
-Navigating on Desktop is pretty straightforward where you can navigate around using the sidebar to the left side of your screen.
+Welcome to the Bedrock Perfected Wiki! This guide will show you how to find what you need on a computer and on a phone.
 
-![Desktop screenshot](/src/images/getting-started/desktop.webp)
+## Using a Computer
 
-You can also utilize the Search Bar either by pressing `Ctrl + K` or clicking it manually using your mouse and then just type what you want to search up.
+Using the wiki on a computer is easy. You can find everything by looking at the **Sidebar** on the left side of your screen. It groups pages into clear sections, like New Biomes and New Structures.
 
-![Desktop search bar highlight](/src/images/getting-started/desktop-search.webp)
+![Desktop Navigation View](/src/images/getting-started/desktop.webp)
 
-## Navigating on Mobile
-Open the sidebar by clicking the hamburger menu on top left of the screen. You can also click the magnifying glass icon to search things up.
+### Using Search
 
-![Mobile screenshot](/src/images/getting-started/mobile.webp)
+If you know what you want to find, use the search bar. 
 
-## More
+You can open search by:
+- Clicking the **Search box** at the top of the page.
+- Pressing `Ctrl + K` (or `Cmd + K` on Mac) on your keyboard.
 
-If you still need help with how to browse the wiki, [join the Discord server](https://discord.gg/R6b8HzYKtg) for further assisting.
+Just start typing, and the wiki will show you the best results.
+
+![Desktop Search Bar Highlight](/src/images/getting-started/desktop-search.webp)
+
+## Using a Phone
+
+The wiki works great on phones, too.
+
+To open the menu and see all pages, tap the **Menu button** (the word "Menu" with lines next to it) just below the top bar. To search, tap the **Magnifying Glass** icon at the top of your screen.
+
+![Mobile Navigation View](/src/images/getting-started/mobile.webp)
+
+---
+
+> [!TIP]
+> **Need more help?** 
+> If you still cannot find what you need, please [join our Discord server](https://discord.gg/R6b8HzYKtg). Our community will be happy to help you!
