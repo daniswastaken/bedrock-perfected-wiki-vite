@@ -152,7 +152,7 @@ export default defineConfig({
 
     transformHead({ page, pageData, title, description }) {
         const cleanPage = page.replace(/\.md$/, '').replace(/(^|\/)index$/, '$1');
-        const pageUrl = `${SITE_URL}/${cleanPage}`.replace(/\/$/, '') || SITE_URL;
+        const pageUrl = cleanPage ? `${SITE_URL}/${cleanPage}` : SITE_URL;
         const isHome = page === 'index.md';
 
         const pageTitle = isHome
